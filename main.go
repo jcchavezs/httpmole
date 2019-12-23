@@ -18,6 +18,7 @@ type response struct {
 	body       []byte
 }
 
+// UnmarshalJSON unmarshals a JSON response file content
 func (r *response) UnmarshalJSON(data []byte) error {
 	ur := &struct {
 		StatusCode int               `json:"status_code"`
@@ -28,9 +29,31 @@ func (r *response) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.statusCode = ur.StatusCode
-	r.body = []byte(ur.Body)
+	r.body = unescapeBody(ur.Body)
 	r.headers = ur.Headers
 	return nil
+}
+
+// unescapeBody removes trailing double quotes and escaping backslashes
+func unescapeBody(str []byte) []byte {
+	if str[0] == '"' {
+		str = str[1:]
+	}
+
+	if str[len(str)-1] == '"' {
+		str = str[:len(str)-1]
+	}
+
+	var dstRune []rune
+	strRune := []rune(string(str))
+	strLenth := len(strRune)
+	for i := 0; i < strLenth; i++ {
+		if strRune[i] == []rune{'\\'}[0] && strRune[i+1] == []rune{'"'}[0] {
+			continue
+		}
+		dstRune = append(dstRune, strRune[i])
+	}
+	return []byte(string(dstRune))
 }
 
 func (r *response) copyFrom(or response) {
@@ -46,8 +69,13 @@ func main() {
 		resStatusCode int
 	)
 
-	flag.IntVar(&port, "p", 8081, "Application port")
-	flag.StringVar(&resFilepath, "response-file", "", "Response filepath")
+	flag.IntVar(&port, "p", 8081, "Listening port")
+	flag.StringVar(
+		&resFilepath,
+		"response-file",
+		"",
+		"Response filepath in JSON format. See https://github.com/jcchavezs/httpmole/blob/master/examples/response-file.json",
+	)
 	flag.IntVar(&resStatusCode, "response-status", 200, "Response status code")
 	flag.Parse()
 
@@ -87,7 +115,7 @@ func main() {
 		}
 
 		if r.Method != "GET" && len(rBody) > 0 {
-			record += fmt.Sprintf("\n%s", string(rBody))
+			record += fmt.Sprintf("\n%s\n", string(rBody))
 		}
 
 		for k, v := range res.headers {
@@ -114,6 +142,8 @@ func checkNewResponse(watcher *fsnotify.Watcher, resFilepath string, resNeedsSyn
 	}
 }
 
+// loadResponse reads the resFilepath and overrides the values in the provided
+// response. If the json parsing fails, the response won't be overwriten.
 func loadResponse(resFilepath string, res *response) error {
 	data, err := ioutil.ReadFile(resFilepath)
 	if err != nil {

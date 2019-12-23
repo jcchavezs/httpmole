@@ -1,9 +1,9 @@
 {
-    "status_code": 202,
+    "status_code": 404,
     "headers": {
         "content-type": "application/json"
     },
     "body": {
-        "error": "abcdx"
+        "message": "I am not here"
     }
 }

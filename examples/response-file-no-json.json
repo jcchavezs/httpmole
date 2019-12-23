@@ -1,0 +1,7 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": "text/xml"
+    },
+    "body":"<?xml version=\"1.0\"?><message>I am saying the truth</message>"
+}

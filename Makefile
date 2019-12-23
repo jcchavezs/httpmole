@@ -1,10 +1,10 @@
 VERSION ?= dev
 GIT_COMMIT ?=$(shell git rev-parse HEAD)
 BUILD_DATE ?= $(shell date +%FT%T%z)
-IMAGE_NAME := "httplie"
+IMAGE_NAME := "httpmole"
 
 build:
-	go build -ldflags "-w -X main.GitCommit=${GIT_COMMIT} -X main.Version=${VERSION} -X main.BuildDate=${BUILD_DATE}" -o httplie main.go
+	go build -ldflags "-w -X main.GitCommit=${GIT_COMMIT} -X main.Version=${VERSION} -X main.BuildDate=${BUILD_DATE}" -o httpmole main.go
 
 package:
 	@echo "Building image ${BIN_NAME} ${VERSION} $(GIT_COMMIT)"

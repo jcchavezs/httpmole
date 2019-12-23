@@ -1,6 +1,6 @@
-# httplie
+# httpmole
 
-**httplie** provides a mock server that will lie to http clients, saying as response whatever you tell it to say.
+**httpmole** provides a mock server that will lie to http clients, saying as response whatever you tell it to say.
 
 It provides support for a `response-file` that you can edit on real-time.
 
@@ -10,14 +10,14 @@ It provides support for a `response-file` that you can edit on real-time.
 
 ```bash
 make build // builds the binary
-./httplie -p=8082 -response-status=200
+./httpmole -p=8082 -response-status=200
 ```
 
 or reading a response file:
 
 ```bash
 make build
-./httplie -p=8082 -response-file=./myresponse.json
+./httpmole -p=8082 -response-file=./myresponse.json
 vim ./myresponse.json
 ```
 
@@ -38,5 +38,5 @@ vim ./myresponse.json
 ### Using docker
 
 ```bash
-docker run -p "8081:8081" -v `pwd`/response.json:/httplie/response.json -response-file=/httplie/response.json
+docker run -p "8081:8081" -v `pwd`/response.json:/httpmole/response.json -response-file=/httpmole/response.json
 ```

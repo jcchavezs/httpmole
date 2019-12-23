@@ -3,7 +3,7 @@ FROM golang:1.13-alpine AS build-stage
 RUN apk add --update make
 RUN apk add --no-cache git
 
-WORKDIR /httplie
+WORKDIR /httpmole
 
 COPY go.mod .
 COPY go.sum .
@@ -20,11 +20,11 @@ RUN make build
 FROM alpine
 
 RUN apk --update add ca-certificates
-RUN mkdir /httplie
-WORKDIR /httplie
+RUN mkdir /httpmole
+WORKDIR /httpmole
 
-COPY --from=build-stage  /httplie .
+COPY --from=build-stage  /httpmole .
 
 EXPOSE 8081
 
-ENTRYPOINT ["./httplie"]
+ENTRYPOINT ["./httpmole"]

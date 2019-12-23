@@ -1,4 +1,4 @@
-module github.com/jcchavezs/httplie
+module github.com/jcchavezs/httpmole
 
 go 1.13
 

@@ -1,10 +1,10 @@
 version: '3'
 services:
-  httplie:
-    image: httplie
+  httpmole:
+    image: httpmole
     volumes:
-        - $PWD/response.json:/httplie/response.json
-    command: ["-response-file", "/httplie/response.json"]
+        - $PWD/response.json:/httpmole/response.json
+    command: ["-response-file", "/httpmole/response.json"]
     ports:
         - "8081:8081"
     expose:

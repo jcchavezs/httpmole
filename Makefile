@@ -28,6 +28,3 @@ push:
 	@echo "Pushing docker image to registry: ${VERSION} $(GIT_COMMIT)"
 	docker push $(IMAGE_NAME):${VERSION}
 
-push-latest:
-	@echo "Pushing docker image to registry: latest $(GIT_COMMIT)"
-	docker push $(IMAGE_NAME):latest

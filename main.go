@@ -58,7 +58,7 @@ func unescapeBody(str []byte) []byte {
 
 func (r *response) copyFrom(or response) {
 	r.statusCode = or.statusCode
-	r.body = or.body
+	r.body = or.body[:]
 	r.headers = or.headers
 }
 
@@ -91,7 +91,7 @@ func main() {
 
 		err = watcher.Add(resFilepath)
 		if err == nil {
-			go checkNewResponse(watcher, resFilepath, &resNeedsSync)
+			go checkNewResponse(watcher, &resNeedsSync)
 		} else {
 			log.Fatalf("failed to add the file watcher for %q: %v", resFilepath, err)
 		}
@@ -131,7 +131,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
 
-func checkNewResponse(watcher *fsnotify.Watcher, resFilepath string, resNeedsSync *bool) {
+func checkNewResponse(watcher *fsnotify.Watcher, resNeedsSync *bool) {
 	for {
 		select {
 		case <-watcher.Events:

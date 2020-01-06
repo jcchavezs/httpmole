@@ -1,0 +1,34 @@
+language: go
+
+services:
+  - docker
+
+matrix:
+  fast_finish: true
+  include:
+  - go: "1.13.x"
+    env:
+      - PUBLISH="true"
+  allow_failures:
+  - go: "master"
+    env:
+      - PUBLISH="false"
+env:
+  global:
+    - VERSION=${TRAVIS_BUILD_NUMBER}
+    - BRANCH=${TRAVIS_BRANCH}
+
+before_install:
+  - docker login -u=${DOCKER_USERNAME} -p=${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
+  - go get github.com/golangci/golangci-lint/cmd/golangci-lint
+
+install:
+  - go get ./...
+
+script:
+  - make lint
+  - make test
+
+after_success:
+  - make package
+  - if [[ ${PUBLISH} == "true" ]] && [[ ${TRAVIS_BRANCH} == "master" ]]; then VERSION=master make push; fi

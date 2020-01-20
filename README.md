@@ -1,8 +1,8 @@
 # httpmole
 
-**httpmole** provides a mock server that will act as a mole among your services, telling you everything http clients send to it and telling them whatever you want. Just like an actual mole.
+**httpmole** provides a HTTP mock server that will act as a mole among your services, telling you everything http clients send to it and telling them whatever you want. Just like an actual mole.
 
-It provides support for a `response-file` option where you can modify the response in real time.
+It provides support for a `response-file` option where **you can modify the response in real time**.
 
 ## Install
 

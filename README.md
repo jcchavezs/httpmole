@@ -12,7 +12,7 @@ go install github.com/jcchavezs/httpmole
 
 ## Usage
 
-### Using golang
+### Using the binary
 
 ```bash
 httpmole -p=8082 -response-status=200

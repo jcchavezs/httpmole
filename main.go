@@ -35,17 +35,21 @@ func (r *response) UnmarshalJSON(data []byte) error {
 }
 
 // unescapeBody removes trailing double quotes and escaping backslashes
-func unescapeBody(str []byte) []byte {
-	if str[0] == '"' {
-		str = str[1:]
+func unescapeBody(body []byte) []byte {
+	if len(body) == 0 {
+		return body
 	}
 
-	if str[len(str)-1] == '"' {
-		str = str[:len(str)-1]
+	if body[0] == '"' {
+		body = body[1:]
+	}
+
+	if body[len(body)-1] == '"' {
+		body = body[:len(body)-1]
 	}
 
 	var dstRune []rune
-	strRune := []rune(string(str))
+	strRune := []rune(string(body))
 	strLenth := len(strRune)
 	for i := 0; i < strLenth; i++ {
 		if strRune[i] == []rune{'\\'}[0] && strRune[i+1] == []rune{'"'}[0] {

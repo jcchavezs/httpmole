@@ -3,6 +3,7 @@ package static
 import (
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/jcchavezs/httpmole/pkg/responses"
 )
@@ -22,7 +23,7 @@ func (sr *responder) Respond(_ *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: sr.statusCode,
 		Header:     sr.headers,
-		Body:       ioutil.NopCloser(nil),
+		Body:       ioutil.NopCloser(strings.NewReader("")),
 	}, nil
 }
 

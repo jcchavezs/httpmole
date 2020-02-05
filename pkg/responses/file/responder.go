@@ -61,11 +61,7 @@ func (fr *responder) Respond(_ *http.Request) (*http.Response, error) {
 	res := &http.Response{
 		StatusCode: fr.response.statusCode,
 		Header:     fr.response.headers,
-		Body:       ioutil.NopCloser(nil),
-	}
-
-	if len(fr.response.body) > 0 {
-		res.Body = ioutil.NopCloser(bytes.NewBuffer(fr.response.body))
+		Body:       ioutil.NopCloser(bytes.NewBuffer(fr.response.body)),
 	}
 
 	return res, nil

@@ -1,6 +1,8 @@
 # httpmole
 
-**httpmole** provides a HTTP mock server that will act as a mole among your services, telling you everything http clients send to it and telling them whatever you want. Just like an actual mole.
+[![Build Status](https://travis-ci.com/jcchavezs/httpmole.svg?branch=master)](https://travis-ci.com/jcchavezs/httpmole)
+
+**httpmole** provides a HTTP mock server that will act as a mole among your services, telling you everything http clients send to it and responding them whatever you want it to respond. Just like an actual mole.
 
 It provides support for a `response-file` option where **you can modify the response in real time**.
 
@@ -38,8 +40,17 @@ vim ./myresponse.json
 }
 ```
 
+or proxying a service to inspect the requests:
+
+```bash
+httpmole -p=8082 -response-from=therealservice:8082
+```
+
 ### Using docker
 
 ```bash
-docker run -p "8081:8081" -v `pwd`/response.json:/httpmole/response.json -response-file=/httpmole/response.json
+docker run -p "8081:8081" -v `pwd`/response.json:/httpmole/response.json -response-file=/httpmole/response.json jcchavezs/httpmole
 ```
+
+Docker image is [hosted in dockerhub](https://hub.docker.com/repository/docker/jcchavezs/httpmole
+)

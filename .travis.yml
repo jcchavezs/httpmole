@@ -30,5 +30,12 @@ script:
   - make test
 
 after_success:
-  - make package
-  - if [[ ${PUBLISH} == "true" ]] && [[ ${TRAVIS_BRANCH} == "master" ]]; then VERSION=master make push; fi
+  - echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: curl -sL https://git.io/goreleaser | bash
+  on:
+    tags: true
+    condition: $PUBLISH = "true"

@@ -7,7 +7,7 @@ It provides support for a `response-file` option where **you can modify the resp
 ## Install
 
 ```bash
-go install github.com/jcchavezs/httpmole
+go install github.com/jcchavezs/httpmole/cmd/httpmole
 ```
 
 ## Usage

@@ -1,8 +1,3 @@
-VERSION ?= dev
-GIT_COMMIT ?=$(shell git rev-parse HEAD)
-BUILD_DATE ?= $(shell date +%FT%T%z)
-IMAGE_NAME := "jcchavezs/httpmole"
-
 deps:
 	GO111MODULES=on go get ./...
 
@@ -18,13 +13,11 @@ test:
 	@make unit-test
 
 build:
-	go build -ldflags "-w -X main.GitCommit=${GIT_COMMIT} -X main.Version=${VERSION} -X main.BuildDate=${BUILD_DATE}" -o httpmole main.go
+	go build -o httpmole cmd/httpmole/main.go
 
-package:
-	@echo "Building image ${BIN_NAME} ${VERSION} $(GIT_COMMIT)"
-	docker build --build-arg VERSION=${VERSION} --build-arg GIT_COMMIT=$(GIT_COMMIT) -t $(IMAGE_NAME):${VERSION} -t $(IMAGE_NAME):latest .
+clean:
+	@-rm httpmole
+	@-rm -rf dist
 
-push:
-	@echo "Pushing docker image to registry: ${VERSION} $(GIT_COMMIT)"
-	docker push $(IMAGE_NAME):${VERSION}
-
+release.dryrun:
+	goreleaser release --skip-publish --snapshot --rm-dist

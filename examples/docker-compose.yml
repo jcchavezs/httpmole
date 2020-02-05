@@ -3,9 +3,7 @@ services:
   httpmole:
     image: httpmole
     volumes:
-        - $PWD/response.json:/httpmole/response.json
+        - $PWD/response-file.json:/httpmole/response.json
     command: ["-response-file", "/httpmole/response.json"]
     ports:
-        - "8081:8081"
-    expose:
-        - 8081
+        - "10080:10080"

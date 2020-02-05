@@ -29,9 +29,6 @@ script:
   - make lint
   - make test
 
-after_success:
-  - echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-
 deploy:
 - provider: script
   skip_cleanup: true

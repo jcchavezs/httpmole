@@ -1,0 +1,40 @@
+project_name: httpmole
+env:
+  - GO111MODULE=on
+before:
+  hooks:
+    - go mod download
+builds:
+- binary: httpmole
+  main: ./cmd/httpmole/main.go
+  env:
+  - CGO_ENABLED=0
+  goos:
+  - linux
+  - darwin
+  goarch:
+  - 386
+  - amd64
+archives:
+- replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Version }}-next-{{ .ShortCommit }}"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - docs
+    - test
+    - goreleaser
+dockers:
+- image_templates:
+  - jcchavezs/httpmole:{{ .Version }}
+  dockerfile: Dockerfile
+  binaries:
+  - httpmole

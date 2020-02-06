@@ -37,6 +37,7 @@ changelog:
 dockers:
 - image_templates:
   - jcchavezs/httpmole:{{ .Version }}
+  - jcchavezs/httpmole:latest
   dockerfile: Dockerfile
   binaries:
   - httpmole

@@ -19,7 +19,6 @@ env:
     - BRANCH=${TRAVIS_BRANCH}
 
 before_install:
-  - docker login -u=${DOCKER_USERNAME} -p=${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
   - go get github.com/golangci/golangci-lint/cmd/golangci-lint
 
 install:
@@ -29,10 +28,13 @@ script:
   - make lint
   - make test
 
+after_success:
+  - docker login -u=${DOCKER_USERNAME} -p=${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
+
 deploy:
 - provider: script
   skip_cleanup: true
-  script: curl -sL https://git.io/goreleaser | VERSION=v0.125.0 bash
+  script: curl -sL https://git.io/goreleaser | bash
   on:
     tags: true
     condition: $PUBLISH = "true"

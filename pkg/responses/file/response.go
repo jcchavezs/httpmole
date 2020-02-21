@@ -35,7 +35,7 @@ func (r *response) UnmarshalJSON(data []byte) error {
 }
 
 func (r *response) validate() error {
-	if r.statusCode == 0 || r.statusCode >= 600 {
+	if r.statusCode < 100 || r.statusCode >= 599 {
 		return errors.New("invalid status code")
 	}
 

@@ -54,8 +54,11 @@ func NewResponder(filepath string) responses.Responder {
 
 func (fr *responder) Respond(_ *http.Request) (*http.Response, error) {
 	if fr.mustSyncResponse {
-		if err := fr.loadResponse(); err != nil {
+		isFileRead, err := fr.loadResponse()
+		if !isFileRead {
 			log.Fatalf("failed to load response: %v", err)
+		} else if err != nil {
+			return nil, err
 		}
 	}
 	res := &http.Response{
@@ -89,17 +92,21 @@ func (fr *responder) checkNewResponse() {
 
 // loadResponse reads the resFilepath and overrides the values in the provided
 // response. If the json parsing fails, the response won't be overwriten.
-func (fr *responder) loadResponse() error {
+func (fr *responder) loadResponse() (bool, error) {
 	data, err := ioutil.ReadFile(fr.filepath)
 	if err != nil {
-		return err
+		return false, err
 	}
 	readingRes := response{}
 	err = json.Unmarshal(data, &readingRes)
 	if err != nil {
-		return err
+		return true, err
+	}
+
+	if err = readingRes.validate(); err != nil {
+		return true, err
 	}
 
 	fr.response.copyFrom(readingRes)
-	return nil
+	return true, nil
 }

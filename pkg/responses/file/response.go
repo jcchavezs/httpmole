@@ -2,6 +2,7 @@ package file
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -30,6 +31,14 @@ func (r *response) UnmarshalJSON(data []byte) error {
 	r.statusCode = ur.StatusCode
 	r.body = unescapeJSONBody(ur.Body)
 	r.headers = toMultiValueHeaders(ur.Headers)
+	return nil
+}
+
+func (r *response) validate() error {
+	if r.statusCode < 100 || r.statusCode >= 599 {
+		return errors.New("invalid status code")
+	}
+
 	return nil
 }
 

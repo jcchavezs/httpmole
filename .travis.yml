@@ -28,14 +28,14 @@ script:
   - make lint
   - make test
 
-after_success:
+before_deploy:
   - docker login -u=${DOCKER_USERNAME} -p=${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
   - curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
 
 deploy:
 - provider: script
-  cleanup: false
-  script: GORELEASER_RUNNER=./bin/goreleaser GITHUB_TOKEN=${GITHUB_TOKEN} make release
+  skip_cleanup: true
+  script: GORELEASER_RUNNER="./bin/goreleaser" GITHUB_TOKEN=${GITHUB_TOKEN} make release
   on:
     tags: true
     condition: $PUBLISH = "true"

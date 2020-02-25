@@ -25,5 +25,9 @@ release:
 	@echo "Make sure you are logged in dockerhub"
 	GITHUB_TOKEN=$(GITHUB_TOKEN) $(GORELEASER_RUNNER) release --rm-dist
 
-release.dryrun:
+release-locally:
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o httpmole cmd/httpmole/main.go
+	docker build -t jcchavezs/httpmole:dev .
+
+release-dryrun:
 	$(GORELEASER_RUNNER) release --skip-publish --snapshot --rm-dist

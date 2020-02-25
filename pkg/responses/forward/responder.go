@@ -1,7 +1,6 @@
 package forward
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -20,13 +19,22 @@ func NewResponder(hostport string) responses.Responder {
 }
 
 func (fr *responder) Respond(req *http.Request) (*http.Response, error) {
-	fmt.Println(strings.Replace(req.URL.String(), req.URL.Host, fr.hostport, 1))
 	fReq, _ := http.NewRequest(
 		req.Method,
-		strings.Replace(req.URL.String(), req.URL.Host, fr.hostport, 1),
+		transformURL(req, fr.hostport),
 		req.Body,
 	)
+	fReq.Header = req.Header
 	return fr.httpClient.Do(fReq)
+}
+
+func transformURL(req *http.Request, replacerHost string) (url string) {
+	if req.URL.Host == "" {
+		url = "http://" + replacerHost + req.URL.String()
+	} else {
+		url = strings.Replace(req.URL.String(), req.URL.Host, replacerHost, 1)
+	}
+	return
 }
 
 func (fr *responder) Close() {}

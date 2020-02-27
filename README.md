@@ -58,3 +58,5 @@ docker run -p "8081:8081" -v `pwd`/response.json:/httpmole/response.json -respon
 
 Docker image is [hosted in dockerhub](https://hub.docker.com/repository/docker/jcchavezs/httpmole
 )
+
+**httpmole** is heavily inspired by [httplab](https://github.com/gchaincl/httplab)

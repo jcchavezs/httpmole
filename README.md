@@ -4,7 +4,11 @@
 
 **httpmole** provides a HTTP mock server that will act as a mole among your services, telling you everything http clients send to it and responding them whatever you want it to respond. Just like an actual mole.
 
-It provides support for a `response-file` option where **you can modify the response in real time**.
+It supports:
+
+- `response-status` and `response-header` to quickly spin up a http server.
+- `response-file` option where **you can modify the response in real time** using a file.
+- `response-from` so it can act as a proxy and you can inspect the request/response going to a given service.
 
 ## Install
 

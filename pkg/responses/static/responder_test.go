@@ -1,6 +1,7 @@
 package static
 
 import (
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -16,8 +17,12 @@ func TestNewResponderHasTheExpectedValues(t *testing.T) {
 
 	res, err := rspnr.Respond(nil)
 	assert.Nil(t, err)
+	defer res.Body.Close()
 	assert.Equal(t, 300, res.StatusCode)
 	assert.Equal(t, "value", res.Header.Get("key"))
+	body, err := ioutil.ReadAll(res.Body)
+	assert.Nil(t, err)
+	assert.Empty(t, body)
 }
 
 func TestMain(m *testing.M) {

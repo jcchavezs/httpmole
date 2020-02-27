@@ -16,6 +16,7 @@ func TestNewResponderHasTheExpectedValues(t *testing.T) {
 		assert.Equal(t, "PUT", r.Method)
 		assert.Equal(t, "/path", r.URL.Path)
 		assert.Equal(t, "a0b0c123d0e0f456", r.Header.Get("x-b3-traceid"))
+		rw.Header().Add("Content-Type", "application/vnd.schemaregistry.v1+json")
 		rw.WriteHeader(202)
 		rw.Write([]byte("{\"success\": true}"))
 	}))

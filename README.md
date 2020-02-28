@@ -4,7 +4,9 @@
 
 **httpmole** provides a HTTP mock server that will act as a mole among your services, telling you everything http clients send to it and responding them whatever you want it to respond. Just like an actual mole.
 
-![screencast](images/screencast.gif)
+<p align="center">
+  <img width="640" height="356" src="images/screencast.gif">
+</p>
 
 **Features:**
 

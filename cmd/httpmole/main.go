@@ -43,7 +43,7 @@ func main() {
 		"",
 		"Response source hostport, e.g. realservice:1234",
 	)
-	showResponse := flag.Bool("show-response", false, "Display response")
+	showResponse := flag.Bool("show-response", false, "Display the response along with the request")
 	flag.Parse()
 
 	var resp responses.Responder

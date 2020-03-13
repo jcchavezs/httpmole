@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/jcchavezs/httpmole/pkg/flags"
+	"github.com/jcchavezs/httpmole/pkg/format"
 	"github.com/jcchavezs/httpmole/pkg/responses"
 	"github.com/jcchavezs/httpmole/pkg/responses/file"
 	"github.com/jcchavezs/httpmole/pkg/responses/forward"
@@ -121,9 +122,12 @@ func writeResponse(res *http.Response, w http.ResponseWriter, lw io.Writer) {
 	if res.StatusCode != http.StatusNoContent {
 		body, err = ioutil.ReadAll(res.Body)
 		if err == nil && len(body) > 0 {
-			w.Write(body)
+			// Here we assume that whatever response adapter is adding a best guess content type
+			// and use that information for further tweaks.
+			formatter := format.GetFormatterContentType(res.Header.Get("Content-Type"))
+			w.Write(formatter(body, format.Expanded))
 			if lw != nil {
-				lw.Write([]byte(fmt.Sprintf("\n\n%s", string(body))))
+				lw.Write([]byte(fmt.Sprintf("\n\n%s", string(formatter(body, format.Minified)))))
 			}
 		}
 	}

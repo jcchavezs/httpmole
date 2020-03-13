@@ -90,6 +90,30 @@ func (fr *responder) checkNewResponse() {
 	}
 }
 
+func isRawJSON(body []byte) bool {
+	return (body[0] == '{' || body[0] == '[')
+}
+
+func unescapeQuotesInBody(body []byte) []byte {
+	if len(body) < 2 {
+		return body
+	}
+
+	// It is a string hence we need to unescape quotes
+	body = body[1 : len(body)-1]
+
+	var dstRune []rune
+	strRune := []rune(string(body))
+	strLenth := len(strRune)
+	for i := 0; i < strLenth; i++ {
+		if strRune[i] == []rune{'\\'}[0] && strRune[i+1] == []rune{'"'}[0] {
+			continue
+		}
+		dstRune = append(dstRune, strRune[i])
+	}
+	return []byte(string(dstRune))
+}
+
 // loadResponse reads the resFilepath and overrides the values in the provided
 // response. If the json parsing fails, the response won't be overwriten.
 func (fr *responder) loadResponse() (bool, error) {
@@ -105,6 +129,14 @@ func (fr *responder) loadResponse() (bool, error) {
 
 	if err = readingRes.validate(); err != nil {
 		return true, err
+	}
+
+	if isRawJSON(readingRes.body) {
+		if readingRes.headers.Get("Content-Type") == "" {
+			readingRes.headers.Set("Content-Type", "application/json")
+		}
+	} else {
+		readingRes.body = unescapeQuotesInBody(readingRes.body)
 	}
 
 	fr.response.copyFrom(readingRes)

@@ -29,8 +29,8 @@ func (r *response) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	r.statusCode = ur.StatusCode
-	r.body = unescapeJSONBody(ur.Body)
 	r.headers = toMultiValueHeaders(ur.Headers)
+	r.body = ur.Body
 	return nil
 }
 
@@ -48,29 +48,4 @@ func toMultiValueHeaders(singleValueHeaders map[string]string) http.Header {
 		multiValueHeaders.Add(key, value)
 	}
 	return multiValueHeaders
-}
-
-func unescapeJSONBody(body []byte) []byte {
-	if len(body) < 2 {
-		return body
-	}
-
-	if body[0] == '"' {
-		body = body[1:]
-	}
-
-	if body[len(body)-1] == '"' {
-		body = body[:len(body)-1]
-	}
-
-	var dstRune []rune
-	strRune := []rune(string(body))
-	strLenth := len(strRune)
-	for i := 0; i < strLenth; i++ {
-		if strRune[i] == []rune{'\\'}[0] && strRune[i+1] == []rune{'"'}[0] {
-			continue
-		}
-		dstRune = append(dstRune, strRune[i])
-	}
-	return []byte(string(dstRune))
 }

@@ -9,16 +9,15 @@ import (
 	"go.uber.org/goleak"
 )
 
-func TestUnescapeBodyReturnsEmptySlice(t *testing.T) {
-	body := []byte{}
-	if want, have := "", string(unescapeJSONBody(body)); want != have {
-		t.Errorf("failed to scape body, want %q, have %q", want, have)
-	}
+func TestIsRawJSON(t *testing.T) {
+	assert.True(t, isRawJSON([]byte("{}")))
+	assert.True(t, isRawJSON([]byte("[]")))
+	assert.False(t, isRawJSON([]byte(`"{\"status\":"OK"}"`)))
 }
 
-func TestUnescapeBodyRemovesWrappingQuotes(t *testing.T) {
-	body := []byte(`"{}"`)
-	if want, have := `{}`, string(unescapeJSONBody(body)); want != have {
+func TestUnescapeBodyReturnsEmptySlice(t *testing.T) {
+	body := []byte{}
+	if want, have := "", string(unescapeQuotesInBody(body)); want != have {
 		t.Errorf("failed to scape body, want %q, have %q", want, have)
 	}
 }

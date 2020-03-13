@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/jcchavezs/httpmole/pkg/flags"
+	"github.com/jcchavezs/httpmole/pkg/format"
 	"github.com/jcchavezs/httpmole/pkg/responses"
 	"github.com/jcchavezs/httpmole/pkg/responses/file"
 	"github.com/jcchavezs/httpmole/pkg/responses/forward"
@@ -43,7 +44,7 @@ func main() {
 		"",
 		"Response source hostport, e.g. realservice:1234",
 	)
-	showResponse := flag.Bool("show-response", false, "Display the response along with the request")
+	displayResponse := flag.Bool("show-response", false, "Display the response along with the request")
 	flag.Parse()
 
 	var resp responses.Responder
@@ -61,7 +62,7 @@ func main() {
 		res, err := resp.Respond(req)
 		if err == nil {
 			var logWriter io.Writer
-			if *showResponse {
+			if *displayResponse {
 				logWriter = os.Stdout
 			}
 			writeResponse(res, rw, logWriter)
@@ -121,9 +122,10 @@ func writeResponse(res *http.Response, w http.ResponseWriter, lw io.Writer) {
 	if res.StatusCode != http.StatusNoContent {
 		body, err = ioutil.ReadAll(res.Body)
 		if err == nil && len(body) > 0 {
-			w.Write(body)
+			formatter := format.GetFormatterContentType(res.Header.Get("Content-Type"))
+			w.Write(formatter(body, format.Expanded))
 			if lw != nil {
-				lw.Write([]byte(fmt.Sprintf("\n\n%s", string(body))))
+				lw.Write([]byte(fmt.Sprintf("\n\n%s", string(formatter(body, format.Minified)))))
 			}
 		}
 	}

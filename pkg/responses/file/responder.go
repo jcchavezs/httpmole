@@ -95,7 +95,7 @@ func isRawJSON(body []byte) bool {
 }
 
 func unescapeQuotesInBody(body []byte) []byte {
-	if len(body) == 0 {
+	if len(body) < 2 {
 		return body
 	}
 

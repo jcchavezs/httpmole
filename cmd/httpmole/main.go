@@ -44,7 +44,7 @@ func main() {
 		"",
 		"Response source hostport, e.g. realservice:1234",
 	)
-	displayResponse := flag.Bool("show-response", false, "Display the response along with the request")
+	showResponse := flag.Bool("show-response", false, "Display the response along with the request")
 	flag.Parse()
 
 	var resp responses.Responder
@@ -62,7 +62,7 @@ func main() {
 		res, err := resp.Respond(req)
 		if err == nil {
 			var logWriter io.Writer
-			if *displayResponse {
+			if *showResponse {
 				logWriter = os.Stdout
 			}
 			writeResponse(res, rw, logWriter)

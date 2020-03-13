@@ -81,18 +81,6 @@ func TestNewResponderHasTheExpectedValues(t *testing.T) {
 	res.Body.Close()
 }
 
-const responseContentUsingJSON = `
-	{
-		"status_code": 403,
-		"headers": {
-			"x-request-id": "xyz987"
-		},
-		"body": {
-			"success": false
-		}
-	}
-`
-
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m)
 }

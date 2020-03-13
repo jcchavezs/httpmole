@@ -122,6 +122,8 @@ func writeResponse(res *http.Response, w http.ResponseWriter, lw io.Writer) {
 	if res.StatusCode != http.StatusNoContent {
 		body, err = ioutil.ReadAll(res.Body)
 		if err == nil && len(body) > 0 {
+			// Here we assume that whatever response adapter is adding a best guess content type
+			// and use that information for further tweaks.
 			formatter := format.GetFormatterContentType(res.Header.Get("Content-Type"))
 			w.Write(formatter(body, format.Expanded))
 			if lw != nil {

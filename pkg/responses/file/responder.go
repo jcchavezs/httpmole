@@ -3,10 +3,10 @@ package file
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"sync"
 
 	fpath "path/filepath"
@@ -33,34 +33,44 @@ func NewResponder(filepath string) responses.Responder {
 		log.Fatalf("failed to stablish absolute path for %q: %v", filepath, err)
 	}
 
-	if _, err := os.Stat(filepath); os.IsNotExist(err) {
-		log.Fatalf("failed to check response file: %v", err)
-	}
 	r := &responder{filepath: filepath, mustSyncResponse: true, response: &response{}}
-	r.watcher, err = fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatalf("failed to start the response watcher: %v", err)
-	}
-
-	err = r.watcher.Add(filepath)
-	if err == nil {
-		go r.checkNewResponse()
-	} else {
-		log.Fatalf("failed to add the file watcher for %q: %v", filepath, err)
-	}
 
 	return r
 }
 
+func (fr *responder) lazyLoadFileWatcher() error {
+	var err error
+	fr.watcher, err = fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatalf("failed to start the response watcher: %v", err)
+	}
+
+	err = fr.watcher.Add(fr.filepath)
+	if err == nil {
+		go fr.checkNewResponse()
+	} else {
+		return fmt.Errorf("failed to add the file watcher for %q: %v", fr.filepath, err)
+	}
+
+	return nil
+}
+
 func (fr *responder) Respond(_ *http.Request) (*http.Response, error) {
-	if fr.mustSyncResponse {
-		isFileRead, err := fr.loadResponse()
-		if !isFileRead {
-			log.Fatalf("failed to load response: %v", err)
-		} else if err != nil {
+	if fr.watcher == nil {
+		// the service should be still be up even if the fail does not exist, mostly because
+		// the usual flow is to open the app and then create the file, hence the deferring of
+		// the file watcher loading until the request comes.
+		if err := fr.lazyLoadFileWatcher(); err != nil {
 			return nil, err
 		}
 	}
+
+	if fr.mustSyncResponse {
+		if err := fr.loadResponse(); err != nil {
+			return nil, err
+		}
+	}
+
 	res := &http.Response{
 		StatusCode: fr.response.statusCode,
 		Header:     fr.response.headers,
@@ -91,6 +101,10 @@ func (fr *responder) checkNewResponse() {
 }
 
 func isRawJSON(body []byte) bool {
+	if len(body) == 0 {
+		return false
+	}
+
 	return (body[0] == '{' || body[0] == '[')
 }
 
@@ -116,19 +130,19 @@ func unescapeQuotesInBody(body []byte) []byte {
 
 // loadResponse reads the resFilepath and overrides the values in the provided
 // response. If the json parsing fails, the response won't be overwriten.
-func (fr *responder) loadResponse() (bool, error) {
+func (fr *responder) loadResponse() error {
 	data, err := ioutil.ReadFile(fr.filepath)
 	if err != nil {
-		return false, err
+		return err
 	}
 	readingRes := response{}
 	err = json.Unmarshal(data, &readingRes)
 	if err != nil {
-		return true, err
+		return err
 	}
 
 	if err = readingRes.validate(); err != nil {
-		return true, err
+		return err
 	}
 
 	if isRawJSON(readingRes.body) {
@@ -140,5 +154,5 @@ func (fr *responder) loadResponse() (bool, error) {
 	}
 
 	fr.response.copyFrom(readingRes)
-	return true, nil
+	return nil
 }

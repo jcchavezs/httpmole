@@ -1,5 +1,6 @@
 package format
 
+// T represents the format type.
 type T int
 
 const (
@@ -10,12 +11,15 @@ const (
 	Expanded
 )
 
+// Formatter is a callable type that returns a formatted body for a type.
 type Formatter func(body []byte, f T) []byte
 
+// Noop is a no-op formatter.
 func Noop(body []byte, _ T) []byte {
 	return body
 }
 
+// GetFormatterContentType returns the formatter based on the body content type
 func GetFormatterContentType(contentType string) Formatter {
 	switch contentType {
 	case "application/json":

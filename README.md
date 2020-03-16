@@ -8,11 +8,21 @@
   <img width="640" height="356" src="images/screencast.gif">
 </p>
 
-**Features:**
+## Features
+
+### Response source
 
 - Use `response-status` and `response-header` to quickly spin up a http server.
 - Use `response-file` to **modify the response in real time** using a text editor.
 - Use `response-from` to act as a proxy and be able to inspect the request/response going to a given service.
+
+### Logging
+
+- Use `log-response` to log the response along with the request in the stdout.
+- Use `log-filter-method` to log only matching method e.g. `"GET|DELETE"`.
+- Use `log-filter-path` to log only matching path e.g. `"/subjects"`.
+
+**Note**: Golang `regexp` package [does not support the *negative lookahead operator*](https://stackoverflow.com/questions/42515407/is-there-a-way-to-match-everything-except-a-constant-string-using-go-regexp#comment72168422_42515407) hence we can't pass a blacklist of endpoints like `/(?!health)` for paths.
 
 ## Install
 

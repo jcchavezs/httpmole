@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -22,11 +23,13 @@ import (
 
 func main() {
 	var (
-		port           int
-		resFilepath    string
-		resStatusCode  int
-		resHeaderLines flags.Slice
-		resFrom        string
+		port             int
+		resFilepath      string
+		resStatusCode    int
+		resHeaderLines   flags.Slice
+		resFrom          string
+		logMethodMatcher *regexp.Regexp
+		logPathMatcher   *regexp.Regexp
 	)
 
 	flag.IntVar(&port, "p", 10080, "Listening port")
@@ -44,8 +47,26 @@ func main() {
 		"",
 		"Response source hostport, e.g. realservice:1234",
 	)
-	showResponse := flag.Bool("show-response", false, "Display the response along with the request")
+	logResponse := flag.Bool("log-response", false, "Logs the response along with the request")
+	logMethodRegex := flag.String("log-filter-method", "", "Log only matching method e.g. `\"GET|DELETE\"`")
+	logPathRegex := flag.String("log-filter-path", "", "Log only matching path e.g. \"/^(health)\"")
 	flag.Parse()
+
+	var err error
+	if *logMethodRegex != "" {
+		logMethodMatcher, err = regexp.Compile(*logMethodRegex)
+		if err != nil {
+			log.Fatal("failed to compile log-filter-method")
+		}
+	}
+	if *logPathRegex != "" {
+		logPathMatcher, err = regexp.Compile(*logPathRegex)
+		if err != nil {
+			log.Fatal("failed to compile log-filter-path")
+		}
+	}
+
+	logRequestMatcher := makeLogRequestMatcher(logMethodMatcher, logPathMatcher)
 
 	var resp responses.Responder
 	if resFrom != "" {
@@ -57,16 +78,20 @@ func main() {
 	}
 	defer resp.Close()
 
+	logWriter := os.Stdout
+
 	http.HandleFunc("/", func(rw http.ResponseWriter, req *http.Request) {
-		logRequest(req, os.Stdout)
+		shouldLogRequest := logRequestMatcher(req)
+		if shouldLogRequest {
+			logRequest(req, logWriter)
+		}
 		res, err := resp.Respond(req)
 		if err == nil {
-			var logWriter io.Writer
-			if *showResponse {
-				logWriter = os.Stdout
+			var logResponseWriter io.Writer
+			if *logResponse && shouldLogRequest {
+				logResponseWriter = logWriter
 			}
-			writeResponse(res, rw, logWriter)
-
+			writeResponse(res, rw, logResponseWriter)
 		} else {
 			log.Printf("failed to resolve the response: %v\n\n", err)
 			rw.WriteHeader(502)
@@ -74,6 +99,28 @@ func main() {
 	})
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+}
+
+func makeLogRequestMatcher(logMethodMatcher, logPathMatcher *regexp.Regexp) func(r *http.Request) bool {
+	if logMethodMatcher == nil && logPathMatcher == nil {
+		return func(r *http.Request) bool {
+			return true
+		}
+	}
+
+	if logMethodMatcher == nil {
+		return func(r *http.Request) bool {
+			return logPathMatcher.MatchString(r.URL.Path)
+		}
+	} else if logPathMatcher == nil {
+		return func(r *http.Request) bool {
+			return logMethodMatcher.MatchString(r.Method)
+		}
+	} else {
+		return func(r *http.Request) bool {
+			return logPathMatcher.MatchString(r.URL.Path) && logMethodMatcher.MatchString(r.Method)
+		}
+	}
 }
 
 func logRequest(r *http.Request, w io.Writer) {
@@ -101,7 +148,7 @@ func logRequest(r *http.Request, w io.Writer) {
 
 func writeResponse(res *http.Response, w http.ResponseWriter, lw io.Writer) {
 	if lw != nil {
-		lw.Write([]byte(fmt.Sprintf("Status Code: %d", res.StatusCode)))
+		lw.Write([]byte(fmt.Sprintf("%d %s", res.StatusCode, http.StatusText(res.StatusCode))))
 	}
 
 	for k, v := range res.Header {

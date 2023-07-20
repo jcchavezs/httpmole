@@ -138,7 +138,7 @@ func writeResponse(res *http.Response, w http.ResponseWriter, lw io.Writer) {
 }
 
 func toHeadersMap(headersLine []string) *http.Header {
-	headers := new(http.Header)
+	headers := &http.Header{}
 
 	if len(headersLine) != 0 {
 		for _, headerLine := range headersLine {

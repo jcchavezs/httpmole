@@ -37,7 +37,7 @@ func main() {
 		"Response filepath in JSON format. See https://github.com/jcchavezs/httpmole/blob/master/examples/response-file.json",
 	)
 	flag.IntVar(&resStatusCode, "response-status", 200, "Response status code")
-	flag.Var(&resHeaderLines, "response-header", "Response headers")
+	flag.Var(&resHeaderLines, "response-header", "Response headers e.g. location:/login")
 	flag.StringVar(
 		&resFrom,
 		"response-from",
@@ -138,11 +138,11 @@ func writeResponse(res *http.Response, w http.ResponseWriter, lw io.Writer) {
 }
 
 func toHeadersMap(headersLine []string) *http.Header {
-	headers := new(http.Header)
+	headers := &http.Header{}
 
 	if len(headersLine) != 0 {
 		for _, headerLine := range headersLine {
-			headerLinePieces := strings.Split(headerLine, ":")
+			headerLinePieces := strings.SplitN(headerLine, ":", 2)
 			headers.Add(headerLinePieces[0], headerLinePieces[1])
 		}
 	}

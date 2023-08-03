@@ -27,6 +27,8 @@ func main() {
 		resStatusCode  int
 		resHeaderLines flags.Slice
 		resFrom        string
+		showResponse   bool
+		durationInMS   int
 	)
 
 	flag.IntVar(&port, "p", 10080, "Listening port")
@@ -44,7 +46,8 @@ func main() {
 		"",
 		"Response source hostport, e.g. realservice:1234",
 	)
-	showResponse := flag.Bool("show-response", false, "Display the response along with the request")
+	flag.BoolVar(&showResponse, "show-response", false, "Display the response along with the request")
+	flag.IntVar(&durationInMS, "duration-ms", 0, "Duration of the operation")
 	flag.Parse()
 
 	var resp responses.Responder
@@ -59,14 +62,20 @@ func main() {
 
 	http.HandleFunc("/", func(rw http.ResponseWriter, req *http.Request) {
 		logRequest(req, os.Stdout)
+		if durationInMS > 0 {
+			time.Sleep(time.Duration(durationInMS) * time.Millisecond)
+		}
+
 		res, err := resp.Respond(req)
 		if err == nil {
 			var logWriter io.Writer
-			if *showResponse {
+			if showResponse {
 				logWriter = os.Stdout
 			}
+			if durationInMS > 0 {
+				res.Header.Set("Server-Timing", fmt.Sprintf("app;dur=%.2f", float64(durationInMS/1000.0)))
+			}
 			writeResponse(res, rw, logWriter)
-
 		} else {
 			log.Printf("failed to resolve the response: %v\n\n", err)
 			rw.WriteHeader(502)
@@ -83,15 +92,15 @@ func logRequest(r *http.Request, w io.Writer) {
 	}
 
 	if r.Method != "GET" {
-		rBody, err := ioutil.ReadAll(r.Body)
+		rBody, err := io.ReadAll(r.Body)
 		if err != nil {
 			log.Printf("failed to read request body: %v", err)
 			return
 		}
 		r.Body.Close()
 
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(rBody))
-		if rBody != nil && len(rBody) > 0 {
+		r.Body = io.NopCloser(bytes.NewBuffer(rBody))
+		if len(rBody) > 0 {
 			w.Write([]byte(fmt.Sprintf("\n\n%s", string(rBody))))
 		}
 	}

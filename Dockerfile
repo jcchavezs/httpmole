@@ -1,8 +1,8 @@
-FROM scratch
+FROM --platform=${TARGETPLATFORM} scratch
 
 ARG TARGETOS TARGETARCH
 
-COPY build/httpmole /
+COPY build/httpmole-${TARGETOS}-${TARGETARCH} /
 
 EXPOSE 8081
 

@@ -15,7 +15,8 @@ on:
       - "LICENSE"
 
 env:
-  GO_VERSION: "1.21.x"
+  GO_VERSION: "1.22.x"
+  REGISTRY: ghcr.io
 
 jobs:
   build:
@@ -48,7 +49,7 @@ jobs:
       - name: Login to GHCR
         uses: docker/login-action@v2
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -58,4 +59,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
-          tags: jcchavezs/httpmole:main
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}:main

@@ -1,6 +1,8 @@
-FROM alpine:3.7
+FROM scratch
 
-COPY httpmole /
+ARG TARGETOS TARGETARCH
+
+COPY build/httpmole /
 
 EXPOSE 8081
 

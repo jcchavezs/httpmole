@@ -2,8 +2,8 @@ FROM --platform=${TARGETPLATFORM} scratch
 
 ARG TARGETOS TARGETARCH
 
-COPY build/httpmole-${TARGETOS}-${TARGETARCH} /
+COPY build/httpmole-${TARGETOS}-${TARGETARCH} /httpmole
 
-EXPOSE 8081
+EXPOSE 10080
 
-ENTRYPOINT ["/httpmole"]
+ENTRYPOINT ["/httpmole", "-p", "10080"]

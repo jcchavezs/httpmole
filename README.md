@@ -1,6 +1,6 @@
 # httpmole
 
-[![Build Status](https://travis-ci.com/jcchavezs/httpmole.svg?branch=master)](https://travis-ci.com/jcchavezs/httpmole)
+[![CI](https://github.com/jcchavezs/httpmole/actions/workflows/ci.yaml/badge.svg)](https://github.com/jcchavezs/httpmole/actions/workflows/ci.yaml)
 
 **httpmole** provides a HTTP mock server that will act as a mole among your services, telling you everything http clients send to it and responding them whatever you want it to respond. Just like an actual mole.
 
@@ -56,16 +56,13 @@ httpmole -p=8082 -response-from=therealservice:8082
 ### Using docker
 
 ```bash
-docker run -p "10080:10080" jcchavezs/httpmole -response-status=201
+docker run -p "10080:10080" ghcr.io/jcchavezs/httpmole -response-status=201
 ```
 
 or pass a response file over volumes
 
 ```bash
-docker run -p "10080:10080" -v `pwd`/response.json:/httpmole/response.json jcchavezs/httpmole -response-file=/httpmole/response.json
+docker run -p "10080:10080" -v `pwd`/response.json:/httpmole/response.json ghcr.io/jcchavezs/httpmole -response-file=/httpmole/response.json
 ```
-
-Docker image is [hosted in dockerhub](https://hub.docker.com/repository/docker/jcchavezs/httpmole
-)
 
 **httpmole** is heavily inspired by [httplab](https://github.com/gchaincl/httplab)

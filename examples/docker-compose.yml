@@ -1,7 +1,7 @@
 version: '3'
 services:
   httpmole:
-    image: httpmole
+    image: jcchavezs/httpmole:main
     volumes:
         - $PWD/response-file.json:/httpmole/response.json
     command: ["-response-file", "/httpmole/response.json"]

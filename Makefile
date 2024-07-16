@@ -1,3 +1,6 @@
+GOOS ?= $(shell go env GOOS)
+GOARCH ?= $(shell go env GOARCH)
+
 lint:
 	@echo "Running linters"
 	@golangci-lint run ./...

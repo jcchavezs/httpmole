@@ -2,6 +2,7 @@ package forward
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/jcchavezs/httpmole/pkg/responses"
@@ -19,12 +20,13 @@ func NewResponder(hostport string) responses.Responder {
 }
 
 func (fr *responder) Respond(req *http.Request) (*http.Response, error) {
-	fReq, _ := http.NewRequest(
-		req.Method,
-		transformURL(req, fr.hostport),
-		req.Body,
-	)
-	fReq.Header = req.Header
+	fReq := req.Clone(req.Context())
+
+	tURL, err := url.Parse(transformURL(req, fr.hostport))
+	if err != nil {
+		return nil, err
+	}
+	fReq.URL = tURL
 	return fr.httpClient.Do(fReq)
 }
 

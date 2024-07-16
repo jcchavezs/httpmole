@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -47,7 +46,7 @@ func main() {
 		"Response source hostport, e.g. realservice:1234",
 	)
 	flag.BoolVar(&showResponse, "show-response", false, "Display the response along with the request")
-	flag.IntVar(&durationInMS, "duration-ms", 0, "Duration of the operation")
+	flag.IntVar(&durationInMS, "duration-ms", 0, "Duration of the operation in milliseconds")
 	flag.Parse()
 
 	var resp responses.Responder
@@ -62,18 +61,38 @@ func main() {
 
 	http.HandleFunc("/", func(rw http.ResponseWriter, req *http.Request) {
 		logRequest(req, os.Stdout)
-		if durationInMS > 0 {
+
+		var currentDurationInMS = durationInMS
+
+		if currentDurationInMS > 0 {
 			time.Sleep(time.Duration(durationInMS) * time.Millisecond)
 		}
 
-		res, err := resp.Respond(req)
+		var (
+			res *http.Response
+			err error
+		)
+
+		if strings.HasPrefix(req.URL.Path, "/proxy/") {
+			hostport, newReq, ok := newProxyRequest(req)
+			if ok {
+				currentTime := time.Now().UnixMilli()
+				res, err = forward.NewResponder(hostport).Respond(newReq)
+				currentDurationInMS = int(time.Now().UnixMilli() - currentTime)
+			} else {
+				res, err = resp.Respond(req)
+			}
+		} else {
+			res, err = resp.Respond(req)
+		}
+
 		if err == nil {
 			var logWriter io.Writer
 			if showResponse {
 				logWriter = os.Stdout
 			}
-			if durationInMS > 0 {
-				res.Header.Set("Server-Timing", fmt.Sprintf("app;dur=%.2f", float64(durationInMS/1000.0)))
+			if currentDurationInMS > 0 {
+				res.Header.Set("Server-Timing", fmt.Sprintf("app;dur=%.2f", float64(currentDurationInMS/1000.0)))
 			}
 			writeResponse(res, rw, logWriter)
 		} else {
@@ -129,7 +148,7 @@ func writeResponse(res *http.Response, w http.ResponseWriter, lw io.Writer) {
 	)
 
 	if res.StatusCode != http.StatusNoContent {
-		body, err = ioutil.ReadAll(res.Body)
+		body, err = io.ReadAll(res.Body)
 		if err == nil && len(body) > 0 {
 			// Here we assume that whatever response adapter is adding a best guess content type
 			// and use that information for further tweaks.
@@ -156,4 +175,19 @@ func toHeadersMap(headersLine []string) *http.Header {
 		}
 	}
 	return headers
+}
+
+func newProxyRequest(req *http.Request) (string, *http.Request, bool) {
+	if !strings.HasPrefix(req.URL.Path, "/proxy/") {
+		panic("newProxyRequest should not be called with a request that already has a /proxy/ prefix")
+	}
+
+	hostport, newPath, _ := strings.Cut(req.URL.Path[7:], "/")
+	if hostport == "" {
+		return "", nil, false
+	}
+
+	newReq := req.Clone(req.Context())
+	newReq.URL.Path = "/" + newPath
+	return hostport, newReq, true
 }

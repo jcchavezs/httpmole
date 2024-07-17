@@ -65,7 +65,7 @@ func main() {
 		var currentDurationInMS = durationInMS
 
 		if currentDurationInMS > 0 {
-			time.Sleep(time.Duration(durationInMS) * time.Millisecond)
+			time.Sleep(time.Duration(currentDurationInMS) * time.Millisecond)
 		}
 
 		var (
@@ -77,8 +77,10 @@ func main() {
 			hostport, newReq, ok := newProxyRequest(req)
 			if ok {
 				currentTime := time.Now().UnixMilli()
-				res, err = forward.NewResponder(hostport).Respond(newReq)
+				fr := forward.NewResponder(hostport)
+				res, err = fr.Respond(newReq)
 				currentDurationInMS = int(time.Now().UnixMilli() - currentTime)
+				fr.Close()
 			} else {
 				res, err = resp.Respond(req)
 			}
@@ -110,18 +112,21 @@ func logRequest(r *http.Request, w io.Writer) {
 		w.Write([]byte(fmt.Sprintf("\n > %s: %v", k, strings.Join(v, "; "))))
 	}
 
-	if r.Method != "GET" {
-		rBody, err := io.ReadAll(r.Body)
-		if err != nil {
-			log.Printf("failed to read request body: %v", err)
-			return
-		}
-		r.Body.Close()
+	rBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("failed to read request body: %v", err)
+		return
+	}
+	r.Body.Close()
 
+	if len(rBody) == 0 {
+		r.Body = http.NoBody
+	} else {
 		r.Body = io.NopCloser(bytes.NewBuffer(rBody))
-		if len(rBody) > 0 {
-			w.Write([]byte(fmt.Sprintf("\n\n%s", string(rBody))))
-		}
+	}
+
+	if len(rBody) > 0 {
+		w.Write([]byte(fmt.Sprintf("\n\n%s", string(rBody))))
 	}
 
 	w.Write([]byte("\n\n"))
@@ -147,16 +152,14 @@ func writeResponse(res *http.Response, w http.ResponseWriter, lw io.Writer) {
 		err  error
 	)
 
-	if res.StatusCode != http.StatusNoContent {
-		body, err = io.ReadAll(res.Body)
-		if err == nil && len(body) > 0 {
+	body, err = io.ReadAll(res.Body)
+	if err == nil && len(body) > 0 {
+		w.Write(body)
+		if lw != nil {
 			// Here we assume that whatever response adapter is adding a best guess content type
 			// and use that information for further tweaks.
 			formatter := format.GetFormatterContentType(res.Header.Get("Content-Type"))
-			w.Write(formatter(body, format.Expanded))
-			if lw != nil {
-				lw.Write([]byte(fmt.Sprintf("\n\n%s", string(formatter(body, format.Minified)))))
-			}
+			lw.Write([]byte(fmt.Sprintf("\n\n%s", string(formatter(body, format.Minified)))))
 		}
 	}
 
@@ -177,17 +180,28 @@ func toHeadersMap(headersLine []string) *http.Header {
 	return headers
 }
 
+const slashProxyLen = 6 // len("/proxy")
+
 func newProxyRequest(req *http.Request) (string, *http.Request, bool) {
-	if !strings.HasPrefix(req.URL.Path, "/proxy/") {
+	if !strings.HasPrefix(req.URL.Path, "/proxy") {
 		panic("newProxyRequest should not be called with a request that already has a /proxy/ prefix")
 	}
 
-	hostport, newPath, _ := strings.Cut(req.URL.Path[7:], "/")
+	if len(req.URL.Path) == slashProxyLen {
+		return "", nil, false
+	}
+
+	hostport, path, _ := strings.Cut(req.URL.Path[slashProxyLen+1:], "/")
 	if hostport == "" {
 		return "", nil, false
 	}
 
-	newReq := req.Clone(req.Context())
-	newReq.URL.Path = "/" + newPath
+	var err error
+	newReq, err := http.NewRequest(req.Method, "/"+path, req.Body)
+	newReq = newReq.WithContext(req.Context())
+	newReq.Header = req.Header.Clone()
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse the new request URL: %v", err))
+	}
 	return hostport, newReq, true
 }

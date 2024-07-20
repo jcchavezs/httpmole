@@ -15,17 +15,24 @@ func TestToHeadersMap(t *testing.T) {
 
 func TestNewProxyRequest(t *testing.T) {
 	t.Run("proxy with no destination", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "http://test.com/proxy/", nil)
+		req, _ := http.NewRequest("GET", "/proxy/", nil)
+		hostport, _, ok := newProxyRequest(req)
+		require.Equal(t, "", hostport)
+		require.False(t, ok)
+	})
+
+	t.Run("proxy with no destination", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/proxy", nil)
 		hostport, _, ok := newProxyRequest(req)
 		require.Equal(t, "", hostport)
 		require.False(t, ok)
 	})
 
 	t.Run("proxy destinations", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "http://test.com/proxy/svc-a.ns1/proxy/svc-b.ns2/proxy/svc-c.ns3", nil)
+		req, _ := http.NewRequest("GET", "/proxy/svc-a.ns1/proxy/svc-b.ns2/proxy/svc-c.ns3", nil)
 		hostport, newReq, ok := newProxyRequest(req)
 		require.Equal(t, "svc-a.ns1", hostport)
-		require.Equal(t, "/proxy/svc-b.ns2/proxy/svc-c.ns3", newReq.URL.Path)
+		require.Equal(t, "/proxy/svc-b.ns2/proxy/svc-c.ns3", newReq.URL.String())
 		require.True(t, ok)
 	})
 }

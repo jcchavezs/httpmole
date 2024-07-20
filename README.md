@@ -13,11 +13,12 @@
 - Use `response-status` and `response-header` to quickly spin up a http server.
 - Use `response-file` to **modify the response in real time** using a text editor.
 - Use `response-from` to act as a proxy and be able to inspect the request/response going to a given service.
+- Cascade several calls using `/proxy` reserved endpoint.
 
 ## Install
 
 ```bash
-go install github.com/jcchavezs/httpmole/cmd/httpmole
+go install github.com/jcchavezs/httpmole/cmd/httpmole@latest
 ```
 
 ## Usage
@@ -51,6 +52,30 @@ or proxying a service to inspect the incoming requests:
 
 ```bash
 httpmole -p=8082 -response-from=therealservice:8082
+```
+
+or proxying a cascaring call to different services to simulate a distributed transaction:
+
+```bash
+# terminal 1
+httpmole -p=8081 -response-status=201
+
+# terminal 2
+httpmole -p=8082 -response-status=202
+
+# terminal 3
+httpmole -p=8083 -response-status=203
+```
+
+and running
+
+```bash
+$ curl -i http://localhost:8081/proxy/localhost:8082/proxy/localhost:8083
+
+HTTP/1.1 203 Non-Authoritative Information
+Content-Length: 0
+Date: Wed, 17 Jul 2024 08:51:00 GMT
+Server-Timing: app;dur=0.00
 ```
 
 ### Using docker

@@ -21,6 +21,8 @@ import (
 
 func main() {
 	var (
+		host           string
+		p              int
 		port           int
 		resFilepath    string
 		resStatusCode  int
@@ -30,7 +32,9 @@ func main() {
 		durationInMS   int
 	)
 
-	flag.IntVar(&port, "p", 10080, "Listening port")
+	flag.IntVar(&p, "p", 0, "Deprecated: listening port")
+	flag.IntVar(&port, "port", 0, "Listening port")
+	flag.StringVar(&host, "host", "0.0.0.0", "Listening host")
 	flag.StringVar(
 		&resFilepath,
 		"response-file",
@@ -48,6 +52,18 @@ func main() {
 	flag.BoolVar(&showResponse, "show-response", false, "Display the response along with the request")
 	flag.IntVar(&durationInMS, "duration-ms", 0, "Duration of the operation in milliseconds")
 	flag.Parse()
+
+	if p != 0 {
+		log.Printf("warning: -p flag is deprecated, use -port instead")
+	}
+
+	if port == 0 {
+		if p != 0 {
+			port = p
+		} else {
+			port = 10080
+		}
+	}
 
 	var resp responses.Responder
 	if resFrom != "" {
@@ -103,7 +119,9 @@ func main() {
 		}
 	})
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+	addr := fmt.Sprintf("%s:%d", host, port)
+	log.Printf("Listening on %s\n", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func logRequest(r *http.Request, w io.Writer) {
